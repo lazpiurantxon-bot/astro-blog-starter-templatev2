@@ -61,6 +61,13 @@ python3 -m unittest discover -s tests -v
 | Postprocesador Doosan DNM 5700 | ✅ Fanuc i: G54, G43, ciclos fijos, límites de carrera verificados |
 | Fresado de contornos/cajeras | 🔜 |
 | Lectura de planos 2D (PDF/DXF) con cotas y tolerancias | 🔜 |
-| Postprocesador Siemens 840D (ShopMill / código NX) | 🔜 |
+| **Agente orquestando NX CAM vía NXOpen (núcleo para superficies 3D de precisión)** | 🔜 prioridad |
+| Vía experimental 3 ejes (OpenCascade + OpenCAMLib + post propio) | 🔜 |
+
+> **Dirección del proyecto:** el cliente piloto hace mecanizado de precisión de
+> superficies 3D en máquinas de 3 ejes con NX CAM. Las trayectorias de precisión
+> las seguirá calculando NX; el agente automatiza la programación (estrategia,
+> operaciones, herramientas, regímenes) a través de NXOpen. Ver
+> [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) §5–6.
 
 > ⚠️ **El código generado debe verificarse siempre** (simulación en NX/Vericut y prueba en vacío) antes de ejecutarse en máquina. El MVP no modela amarres, colisiones ni utillaje.

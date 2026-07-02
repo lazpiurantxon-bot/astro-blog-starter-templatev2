@@ -135,24 +135,63 @@ Reglas del sistema:
 3. **Humano en el bucle:** la salida es "programa para revisar", no "programa para
    ejecutar". La simulación (NX/Vericut) sigue siendo obligatoria.
 
-## 5. Encaje con NX Siemens (cliente piloto)
+## 5. Perfil del cliente piloto (actualizado)
 
-- **Corto plazo:** NX exporta STEP → este pipeline. Cero cambio de flujo para ellos;
-  el sistema compite con "programar a mano una pieza sencilla".
-- **Medio plazo:** leer el plano PDF que sale de NX Drafting (cotas/tolerancias) y
-  el postprocesador Siemens 840D, de modo que la salida se pueda comparar 1:1 con
-  lo que produce su NX CAM.
-- **Largo plazo:** integración NXOpen (Python) para leer el `.prt` nativo con PMI
-  (anotaciones 3D), que elimina la pérdida de información del STEP.
+Mecanizado **de precisión**, piezas de **superficies 3D** (no prismáticas),
+máquinas de **3 ejes**, programación actual con **NX CAM (Siemens)**.
 
-## 6. Roadmap técnico
+Consecuencias de diseño:
 
-1. **v0 (este repo):** taladrado STEP → DNM 5700, planner reglas + agente, tests.
-2. **v0.2:** detección de cajeras/contornos (migración del reader a OpenCascade),
-   fresado 2.5D, compensación de radio.
-3. **v0.3:** reader de planos PDF con visión (cotas, tolerancias, roscas M en el
-   plano que el STEP no lleva), catálogo de herramientas real del taller.
-4. **v0.4:** post Siemens 840D, hoja de proceso, comparación contra programas NX
-   reales del cliente (benchmark de aceptación).
-5. **v1:** amarres y fases múltiples, simulación de trayectorias, aprendizaje del
-   histórico del taller (memoria del agente).
+1. **Las trayectorias de superficie de precisión las calcula NX, no nosotros.**
+   Control de cresta, suavizado y calidad de acabado a nivel de micras son el
+   corazón de un CAM comercial; reimplementarlos no es viable ni genera confianza
+   en taller. El valor del agente está en eliminar el tiempo de programación,
+   no en sustituir el motor de trayectorias.
+2. **El núcleo del sistema pasa a ser un agente que programa NX vía NXOpen
+   (Python):** carga el `.prt` (con PMI: tolerancias y acabados anotados),
+   decide estrategia (fases, amarres, desbaste/semiacabado/acabado, operación NX
+   por zona, herramientas y regímenes), materializa el plan en NX reutilizando
+   las plantillas del taller, NX genera y verifica las trayectorias, y el post
+   oficial emite el programa.
+3. **3 ejes simplifica el problema** (sin cinemática rotativa) y habilita una
+   **vía experimental propia**: OpenCascade (B-rep del STEP) + OpenCAMLib
+   (desbaste por niveles Z, acabado raster/waterline por drop-cutter) + nuestro
+   post Fanuc. Sirve para desbastes, piezas no críticas y como banco de pruebas
+   del agente sin licencias — no para el acabado de precisión.
+
+```
+                       ┌──────────────────────────────────────────────┐
+   .prt / STEP+plano ─▶│ agente planificador (este repo: planner/)     │
+                       └───────┬──────────────────────────┬───────────┘
+                               │ vía principal            │ vía experimental
+                               ▼                          ▼
+                    NX CAM vía NXOpen              OpenCAMLib (3 ejes)
+                    (trayectorias + verificación)  (desbaste/acabado básico)
+                               │                          │
+                               ▼                          ▼
+                    post oficial NX                postprocessors/ (este repo)
+                               └──────────┬───────────────┘
+                                          ▼
+                            programa CNC + hoja de proceso
+```
+
+El pipeline de taladrado del MVP queda como caso simple y banco de pruebas de
+la cadena completa (reader → planner → validación → post).
+
+## 6. Roadmap técnico (revisado para superficies 3D / 3 ejes)
+
+1. **v0 (este repo):** taladrado STEP → DNM 5700, planner reglas + agente,
+   validación determinista, tests. Demuestra la arquitectura.
+2. **v0.2 — descubrimiento NX:** confirmar licencia NXOpen del piloto,
+   inventariar sus plantillas/operaciones NX y su histórico de piezas; prototipo
+   NXOpen mínimo (abrir .prt, listar geometría y PMI, crear una operación desde
+   plantilla, generar trayectoria, postprocesar).
+3. **v0.3 — agente sobre NX:** el planner produce un plan de proceso (mismo
+   esquema validable de hoy) y un ejecutor NXOpen lo materializa en NX.
+   Benchmark de aceptación: comparar contra programas reales del taller.
+4. **v0.4 — lectura de intención:** PMI del .prt y/o plano PDF con visión
+   (tolerancias → elección de estrategia y acabados); hoja de proceso.
+5. **v0.5 — vía experimental 3 ejes:** OpenCascade + OpenCAMLib para desbaste y
+   acabado básico con nuestro post (G01 punto a punto ya soportable en el post).
+6. **v1:** amarres y fases múltiples, memoria del agente sobre el histórico del
+   taller, más máquinas/postes.
