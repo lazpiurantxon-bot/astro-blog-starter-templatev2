@@ -1,0 +1,21 @@
+{
+  "id": "doosan_dnm5700",
+  "name": "Doosan DNM 5700",
+  "type": "centro_mecanizado_vertical_3_ejes",
+  "control": "FANUC i Plus",
+  "dialect": "fanuc",
+  "travels_mm": { "x": 1050, "y": 570, "z": 520 },
+  "table_mm": { "x": 1300, "y": 570 },
+  "max_table_load_kg": 1000,
+  "spindle": { "taper": "BT40", "max_rpm": 12000, "power_kw": 18.5 },
+  "atc_pockets": 30,
+  "max_feed_mm_min": { "cutting": 10000, "rapid_xy": 36000, "rapid_z": 30000 },
+  "coolant": ["flood", "air"],
+  "work_offsets": ["G54", "G55", "G56", "G57", "G58", "G59"],
+  "post_notes": [
+    "Programa Fanuc: empieza y termina con %, numero de programa O####.",
+    "Cabecera segura: G90 G17 G21 G40 G49 G80.",
+    "Compensacion de longitud G43 H<n> en la aproximacion en Z.",
+    "Retirada de referencia con G91 G28 Z0 antes de M30."
+  ]
+}
